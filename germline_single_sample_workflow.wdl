@@ -53,6 +53,9 @@ workflow germline_single_sample_workflow {
   Int haplotype_scatter_count
   Int break_bands_at_multiples_of
   Int read_length = 250
+  Boolean? input_is_exome
+  Boolean is_exome = select_first([input_is_exome, false])
+  File? exome_interval_list
 
   File ref_fasta
   File ref_fasta_index
@@ -99,6 +102,8 @@ workflow germline_single_sample_workflow {
       dbSNP_vcf_index = dbSNP_vcf_index,
       known_indels_sites_VCFs = known_indels_sites_VCFs,
       known_indels_sites_indices = known_indels_sites_indices,
+      is_exome = is_exome,
+      exome_interval_list = exome_interval_list,
       preemptible_tries = preemptible_tries,
       agg_preemptible_tries = agg_preemptible_tries
   }
