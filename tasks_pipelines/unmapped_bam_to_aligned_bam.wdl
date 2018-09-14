@@ -190,21 +190,22 @@ workflow to_bam_workflow {
         preemptible_tries = agg_preemptible_tries
     }
   }
-  if (is_exome !=){
-    # Create list of sequences for scatter-gather parallelization
-    call Utils.CreateSequenceGroupingTSV as CreateSequenceGroupingTSV {
-      input:
-        ref_dict = ref_dict,
-        preemptible_tries = preemptible_tries
-    }
-  }
-  if (is_exome ==){
+#  if (!is_exome){
+#    # Create list of sequences for scatter-gather parallelization
+#    call Utils.CreateSequenceGroupingTSV as CreateSequenceGroupingTSV {
+#      input:
+#        ref_dict = ref_dict,
+#        preemptible_tries = preemptible_tries
+#    }
+#  }
+#  if (is_exome){
     #creates interval subset lists from a master list for scattering for exomes
     call Utils.CreateIntervalSubsetList {
       input:
-        exome_interval_list = exome_interval_list
+        exome_interval_list = exome_interval_list,
+        preemptible_tries = agg_preemptible_tries
     }
-  }
+#  }
 
   
 
@@ -226,15 +227,15 @@ workflow to_bam_workflow {
   # We need disk to localize the sharded input and output due to the scatter for BQSR.
   # If we take the number we are scattering by and reduce by 3 we will have enough disk space
   # to account for the fact that the data is not split evenly.
-  Int num_of_bqsr_scatters = length(CreateSequenceGroupingTSV.sequence_grouping)
+  Array[File] scatter_array = CreateIntervalSubsetList.scattered_interval_list
+  Int num_of_bqsr_scatters = length(scatter_array)
   Int potential_bqsr_divisor = num_of_bqsr_scatters - 10
   Int bqsr_divisor = if potential_bqsr_divisor > 1 then potential_bqsr_divisor else 1
 
   # Perform Base Quality Score Recalibration (BQSR) on the sorted BAM in parallel
-  if (is_exome !=){
-    scatter (subgroup in CreateSequenceGroupingTSV.sequence_grouping) {
+    scatter (subgroup in scatter_array) {
       # Generate the recalibration model by interval
-      call Processing.BaseRecalibrator as BaseRecalibratorWGS {
+      call Processing.BaseRecalibrator as BaseRecalibrator {
         input:
           input_bam = SortSampleBam.output_bam,
           recalibration_report_filename = base_file_name + ".recal_data.csv",
@@ -250,42 +251,19 @@ workflow to_bam_workflow {
           preemptible_tries = agg_preemptible_tries
       }
     }
-  }
-
-  if (is_exome ==){
-    scatter (interval in CreateIntervalSubsetList.scattered_interval_list) {
-      # Generate the recalibration model by interval
-      call Processing.BaseRecalibrator as BaseRecalibratorExomes {
-        input:
-          input_bam = SortSampleBam.output_bam,
-          recalibration_report_filename = base_file_name + ".recal_data.csv",
-          sequence_group_interval = interval,
-          dbSNP_vcf = dbSNP_vcf,
-          dbSNP_vcf_index = dbSNP_vcf_index,
-          known_indels_sites_VCFs = known_indels_sites_VCFs,
-          known_indels_sites_indices = known_indels_sites_indices,
-          ref_dict = ref_dict,
-          ref_fasta = ref_fasta,
-          ref_fasta_index = ref_fasta_index,
-          bqsr_scatter = bqsr_divisor,
-          preemptible_tries = agg_preemptible_tries
-      }
-    }
-  }
   
   # Merge the recalibration reports resulting from by-interval recalibration
   # The reports are always the same size
   call Processing.GatherBqsrReports as GatherBqsrReports {
     input:
-      input_bqsr_reports = selectfirst([BaseRecalibratorExomes.recalibration_report, BaseRecalibratorWGS.recalibration_report]),
+      input_bqsr_reports = BaseRecalibrator.recalibration_report,
       output_report_filename = base_file_name + ".recal_data.csv",
       preemptible_tries = preemptible_tries
   }
 
-  if (is_exome !=){
-    scatter (subgroup in CreateSequenceGroupingTSV.sequence_grouping_with_unmapped) {
+    scatter (subgroup in scatter_array) {
       # Apply the recalibration model by interval
-      call Processing.ApplyBQSR as ApplyBQSRWGS {
+      call Processing.ApplyBQSR as ApplyBQSR {
         input:
           input_bam = SortSampleBam.output_bam,
           output_bam_basename = recalibrated_bam_basename,
@@ -299,31 +277,11 @@ workflow to_bam_workflow {
           preemptible_tries = agg_preemptible_tries
       }
     }
-  }
-
-  if (is_exome ==){
-    scatter (interval in CreateIntervalSubsetList.scattered_interval_list) {
-      # Apply the recalibration model by interval
-      call Processing.ApplyBQSR as ApplyBQSRExomes {
-        input:
-          input_bam = SortSampleBam.output_bam,
-          output_bam_basename = recalibrated_bam_basename,
-          recalibration_report = GatherBqsrReports.output_bqsr_report,
-          sequence_group_interval = interval,
-          ref_dict = ref_dict,
-          ref_fasta = ref_fasta,
-          ref_fasta_index = ref_fasta_index,
-          bqsr_scatter = bqsr_divisor,
-          compression_level = compression_level,
-          preemptible_tries = agg_preemptible_tries
-      }
-    }
-  }
 
   # Merge the recalibrated BAM files resulting from by-interval recalibration
   call Processing.GatherSortedBamFiles as GatherBamFiles {
     input:
-      input_bams = select_first([ApplyBQSRExomes.recalibrated_bam, ApplyBQSRWGS.recalibrated_bam]),
+      input_bams = ApplyBQSR.recalibrated_bam,
       output_bam_basename = base_file_name,
       total_input_size = agg_bam_size,
       compression_level = compression_level,

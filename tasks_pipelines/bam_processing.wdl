@@ -139,7 +139,7 @@ task MarkDuplicates {
 task BaseRecalibrator {
   String input_bam
   String recalibration_report_filename
-  Array[String] sequence_group_interval
+  Array[File] sequence_group_interval
   File dbSNP_vcf
   File dbSNP_vcf_index
   Array[File] known_indels_sites_VCFs
@@ -183,7 +183,7 @@ task ApplyBQSR {
   String input_bam
   String output_bam_basename
   File recalibration_report
-  Array[String] sequence_group_interval
+  Array[File] sequence_group_interval
   File ref_dict
   File ref_fasta
   File ref_fasta_index

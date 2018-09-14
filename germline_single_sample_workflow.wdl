@@ -54,8 +54,8 @@ workflow germline_single_sample_workflow {
   Int break_bands_at_multiples_of
   Int read_length = 250
   Boolean? input_is_exome
-  Boolean is_exome = select_first([input_is_exome, false])
-  File? exome_interval_list
+  Boolean is_exome = select_first([input_is_exome, true])
+  File exome_interval_list
 
   File ref_fasta
   File ref_fasta_index
