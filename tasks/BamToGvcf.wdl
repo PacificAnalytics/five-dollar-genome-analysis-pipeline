@@ -1,14 +1,10 @@
 version 1.0
 
 # Local Import
-#import "GermlineVariantDiscovery.wdl" as Calling
-#import "Qc.wdl" as QC
-#import "Utilities.wdl" as Utils
+import "GermlineVariantDiscovery.wdl" as Calling
+import "Qc.wdl" as QC
+import "Utilities.wdl" as Utils
 
-# Git URL Import
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/GermlineVariantDiscovery.wdl" as Calling
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/Qc.wdl" as QC
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/Utilities.wdl" as Utils
 
 workflow BamToGvcf {
 

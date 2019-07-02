@@ -16,12 +16,8 @@ version 1.0
 ## licensing information pertaining to the included programs.
 
 # Local import
-#import "./Qc.wdl" as QC
-#import "../structs/GermlineStructs.wdl"
-
-# Git URL import
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/Qc.wdl" as QC
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/structs/GermlineStructs.wdl"
+import "./Qc.wdl" as QC
+import "../structs/GermlineStructs.wdl"
 
 # WORKFLOW DEFINITION
 workflow AggregatedBamQC {
