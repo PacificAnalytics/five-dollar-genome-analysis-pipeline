@@ -1,5 +1,3 @@
-version 1.0
-
 ## Copyright Broad Institute, 2018
 ##
 ## This WDL pipeline implements a split of large readgroups for human whole-genome and exome sequencing data.
@@ -15,35 +13,31 @@ version 1.0
 ## page at https://hub.docker.com/r/broadinstitute/genomes-in-the-cloud/ for detailed
 ## licensing information pertaining to the included programs.
 
-# Local Import
-#import "./Alignment.wdl" as Alignment
-#import "./BamProcessing.wdl" as Processing
-#import "./Utilities.wdl" as Utils
-#import "../structs/GermlineStructs.wdl" as Structs
+import "./tasks_pipelines/alignment.wdl" as Alignment
+import "./tasks_pipelines/bam_processing.wdl" as Processing
+import "./tasks_pipelines/utilities.wdl" as Utils
 
-# Git URL Import
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/Alignment.wdl" as Alignment
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/BamProcessing.wdl" as Processing
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/tasks/Utilities.wdl" as Utils
-import "https://raw.githubusercontent.com/gatk-workflows/five-dollar-genome-analysis-pipeline/1.1.0/structs/GermlineStructs.wdl" as Structs
+workflow split_large_readgroup {
+  File input_bam
 
-workflow SplitLargeReadGroup {
-  input {
-    File input_bam
+  String bwa_commandline
+  String bwa_version
+  String output_bam_basename
+  File ref_fasta
+  File ref_fasta_index
+  File ref_dict
 
-    String bwa_commandline
-    String bwa_version
-    String output_bam_basename
-
-    # reference_fasta.ref_alt is the .alt file from bwa-kit
-    # (https://github.com/lh3/bwa/tree/master/bwakit),
-    # listing the reference contigs that are "alternative".
-    ReferenceFasta reference_fasta
-
-    Int compression_level
-    Int preemptible_tries
-    Int reads_per_file = 48000000
-  }
+  # This is the .alt file from bwa-kit (https://github.com/lh3/bwa/tree/master/bwakit),
+  # listing the reference contigs that are "alternative".
+  File ref_alt
+  File ref_amb
+  File ref_ann
+  File ref_bwt
+  File ref_pac
+  File ref_sa
+  Int compression_level
+  Int preemptible_tries
+  Int reads_per_file = 48000000
 
   call Alignment.SamSplitter as SamSplitter {
     input :
@@ -54,7 +48,7 @@ workflow SplitLargeReadGroup {
   }
 
   scatter(unmapped_bam in SamSplitter.split_bams) {
-    Float current_unmapped_bam_size = size(unmapped_bam, "GiB")
+    Float current_unmapped_bam_size = size(unmapped_bam, "GB")
     String current_name = basename(unmapped_bam, ".bam")
 
     call Alignment.SamToFastqAndBwaMemAndMba as SamToFastqAndBwaMemAndMba {
@@ -62,13 +56,21 @@ workflow SplitLargeReadGroup {
         input_bam = unmapped_bam,
         bwa_commandline = bwa_commandline,
         output_bam_basename = current_name,
-        reference_fasta = reference_fasta,
+        ref_fasta = ref_fasta,
+        ref_fasta_index = ref_fasta_index,
+        ref_dict = ref_dict,
+        ref_alt = ref_alt,
+        ref_bwt = ref_bwt,
+        ref_amb = ref_amb,
+        ref_ann = ref_ann,
+        ref_pac = ref_pac,
+        ref_sa = ref_sa,
         bwa_version = bwa_version,
         compression_level = compression_level,
         preemptible_tries = preemptible_tries
     }
 
-    Float current_mapped_size = size(SamToFastqAndBwaMemAndMba.output_bam, "GiB")
+    Float current_mapped_size = size(SamToFastqAndBwaMemAndMba.output_bam, "GB")
   }
 
   call Utils.SumFloats as SumSplitAlignedSizes {
