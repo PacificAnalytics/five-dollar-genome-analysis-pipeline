@@ -71,7 +71,7 @@ cat <<- EOF > /etc/apt/sources.list.d/mysql.list
 deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7
 EOF
 sudo apt-get update
-sudo apt install mysql-community-server
+sudo apt -y install mysql-community-server
 
 
 SECURE_MYSQL=$(expect -c "
@@ -105,9 +105,9 @@ Q1="CREATE DATABASE IF NOT EXISTS $DATABASE;"
 Q2="GRANT ALL ON *.* TO '$USER'@'localhost' IDENTIFIED BY '$PASS';"
 Q3="FLUSH PRIVILEGES;"
 SQL="${Q1}${Q2}${Q3}"
-sudo $MYSQL -u root -e "$SQL"
+sudo $MYSQL -u root --password="$rootpw" -e "$SQL"
 
 
 echo "Done! "
-echo "REstart shell with exec -l $SHELL"
+echo "Restart shell with exec -l $SHELL"
 echo "Run google init to login."
