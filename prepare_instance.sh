@@ -3,6 +3,11 @@
 # This is the script for the automated setup of Google instances
 # for running Cromwell tasks
 
+if [ "$(id -u)" -ne 0 ]; then
+        echo 'This script must be run by root' >&2
+        exit 1
+fi
+
 # Variables for all (copy with snippets)
 MOUNT_DIR="/home/oggy/big"
 DOCKER_DIR="/home/oggy/big/Docker"
@@ -110,4 +115,4 @@ sudo $MYSQL -u root --password="$rootpw" -e "$SQL"
 
 echo "Done! "
 echo "Restart shell with exec -l $SHELL"
-echo "Run google init to login."
+echo "Run gcloud init to login."
