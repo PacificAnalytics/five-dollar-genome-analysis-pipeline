@@ -67,8 +67,8 @@ task HaplotypeCaller_GATK35_GVCF {
   runtime {
     docker: "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.1-1540490856"
     preemptible: preemptible_tries
-    memory: "10 GB"
-    cpu: "1"
+    memory: "13 GB"
+    cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
   }
   output {
@@ -103,7 +103,7 @@ task HaplotypeCaller_GATK4_VCF {
 
   command <<<
     set -e
-    gatk --java-options "-Xms6000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
+    gatk --java-options "-Xms10000m -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
@@ -118,8 +118,8 @@ task HaplotypeCaller_GATK4_VCF {
   runtime {
     docker: gatk_docker
     preemptible: preemptible_tries
-    memory: "6.5 GB"
-    cpu: "1"
+    memory: "13 GB"
+    cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
   }
   output {
