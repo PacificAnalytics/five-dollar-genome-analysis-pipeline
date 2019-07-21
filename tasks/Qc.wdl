@@ -344,7 +344,7 @@ task ValidateSamFile {
   Int disk_size = ceil(size(input_bam, "GB") + ref_size) + 20
 
   command {
-    java -Xms6000m -jar /usr/gitc/picard.jar \
+    java -Xms5000m -jar /usr/gitc/picard.jar \
       ValidateSamFile \
       INPUT=~{input_bam} \
       OUTPUT=~{report_filename} \
@@ -358,7 +358,7 @@ task ValidateSamFile {
   runtime {
     docker: "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.1-1540490856"
     preemptible: preemptible_tries
-    memory: "7 GB"
+    memory: "6.5 GB"
     disks: "local-disk " + disk_size + " HDD"
   }
   output {
