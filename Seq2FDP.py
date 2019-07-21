@@ -2,16 +2,10 @@ import re
 import time
 import os
 import sys
-<<<<<<< HEAD
 import json
 
 fname_log = sys.argv[1]
 fdp_dir = sys.argv[2]
-=======
-
-fname_log = sys.argv[1]
-fdp_dir = fname_log = sys.argv[2]
->>>>>>> e0a621e8734cacb08b01b01749f7d699123537e4
 fname_template = fdp_dir + "/inputs_template.json"
 with open(fname_log,'r') as fin:
     text = fin.read()
@@ -73,4 +67,3 @@ for i, bam in enumerate(bamlist):
     "-i {} -o $PA_DIR/au_options.json > FDP{}.log 2>&1")
     command = command_template.format(json_name, str(i))
     os.system("screen -dm -S S{} bash -c '{}'".format(str(i), command))
-
