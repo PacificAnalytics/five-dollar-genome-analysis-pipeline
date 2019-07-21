@@ -109,7 +109,8 @@ MYSQL=`which mysql`
 Q1="CREATE DATABASE IF NOT EXISTS $DATABASE;"
 Q2="GRANT ALL ON *.* TO '$USER'@'localhost' IDENTIFIED BY '$PASS';"
 Q3="FLUSH PRIVILEGES;"
-SQL="${Q1}${Q2}${Q3}"
+Q4="SET GLOBAL max_connections = 500;"
+SQL="${Q1}${Q2}${Q3}${Q4}"
 sudo $MYSQL -u root --password="$rootpw" -e "$SQL"
 
 
