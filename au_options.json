@@ -1,9 +1,10 @@
 {
-	"read_from_cache":true,
+  "read_from_cache":true,
   "write_to_cache":true,
-"default_runtime_attributes": {
-                "zones": "australia-southeast1-a australia-southeast1-b australia-southeast1-c",
-                "maxRetries": 1,
-                "memory": "6G"
-        }
+  "default_runtime_attributes": {
+  	"zones": "australia-southeast1-a australia-southeast1-b australia-southeast1-c",
+    "maxRetries": 1,
+    "memory": "6G"
+  },
+  "monitoring_script": "gs://pct-ac-main-f/monitoring.sh"
 }
